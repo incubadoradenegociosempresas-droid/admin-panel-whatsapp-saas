@@ -1,0 +1,106 @@
+🚀 PANEL ADMIN WHATSAPP SAAS - INSTRUCCIONES RÁPIDAS
+====================================================
+
+✅ ARCHIVOS CREADOS (copiar a tu proyecto):
+
+Estructura:
+src/
+  ├── components/
+  │   ├── Dashboard.jsx
+  │   ├── ClientForm.jsx
+  │   └── ClientTable.jsx
+  ├── App.jsx
+  ├── App.css
+  ├── Dashboard.css
+  └── main.jsx
+
+Configuración:
+  ├── package.json
+  ├── vite.config.js
+  ├── index.html
+  └── .env.example → renombra a .env.local
+
+Documentación:
+  ├── SETUP_COMPLETO.md (guía paso a paso)
+  └── n8n-crear-numero-meta.json (workflow n8n)
+
+
+📋 PASOS RÁPIDOS (10 minutos):
+
+1. Crea repo en GitHub:
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/TU_USER/admin-panel-whatsapp-saas.git
+   git push -u origin main
+
+2. Copia .env.example a .env.local y actualiza con tus valores:
+   VITE_SUPABASE_URL=https://ytxnmscxyjttqftmznqj.supabase.co
+   VITE_SUPABASE_KEY=tu_key_aqui
+   VITE_META_TOKEN=tu_token_aqui
+   VITE_WABA_ID=1581567013537402
+   VITE_N8N_ENDPOINT=https://incubadoraempresas2026.app.n8n.cloud/webhook/crear-numero-meta
+
+3. Instala dependencias:
+   npm install
+
+4. Testea localmente:
+   npm run dev
+   Abre http://localhost:5173
+
+5. Importa workflow n8n:
+   - Copia contenido de n8n-crear-numero-meta.json
+   - En n8n crea nuevo workflow
+   - Click en Import
+   - Publica el workflow
+
+6. Deployar en Vercel:
+   npm install -g vercel
+   vercel
+
+7. ¡Listo! Panel activo en Vercel
+
+
+📊 FLUJO DEL PANEL:
+
+Usuario agrega cliente en formulario
+        ↓
+Panel valida y crea tenant en Supabase
+        ↓
+Panel llama n8n para crear número en Meta
+        ↓
+n8n llama Meta API (crea número automático)
+        ↓
+Panel recibe phone_number_id
+        ↓
+Panel guarda en Supabase
+        ↓
+Cliente listo en ~30 segundos
+
+
+🔧 CONFIGURACIONES IMPORTANTES:
+
+- WABA_ID: 1581567013537402 (tu WABA de Incubadora)
+- Meta Token: Ya generado (guárdalo seguro)
+- Supabase: Database ytxnmscxyjttqftmznqj
+- n8n: Tu instancia incubadoraempresas2026
+
+
+⚡ PRÓXIMOS PASOS (después de setup):
+
+1. Agregar autenticación (login/password)
+2. Agregar limpieza de datos sensibles (.env en gitignore)
+3. Personalizar CSS con tu branding
+4. Agregar más campos según necesidad
+5. Integrar pagos (Stripe)
+6. Agregar estadísticas/analytics
+
+
+📞 SOPORTE:
+
+Si algo falla:
+- Verifica que .env.local tiene los valores correctos
+- Recarga la página (F5)
+- Abre consola (F12) para ver errores
+- Revisa SETUP_COMPLETO.md sección "Solucionar Problemas"

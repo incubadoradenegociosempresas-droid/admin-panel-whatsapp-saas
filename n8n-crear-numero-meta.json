@@ -1,0 +1,61 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crear-numero-meta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "id": "webhook-crear-numero",
+      "name": "Webhook Crear Número"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"ok\": true, \"phone_number_id\": $json.phone_number_id, \"phone_number\": $json.phone_number} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [400, 0],
+      "id": "responder-success",
+      "name": "Responder OK"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.instagram.com/v21.0/{{ $json.waba_id }}/phone_numbers",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $secret('META_TOKEN') }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\"phone_number\": \"\", \"type\": \"INDIVIDUAL\", \"display_phone_number_id\": \"\", \"cc\": \"52\", \"phone_number_type\": \"MOBILE\"} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, 100],
+      "id": "crear-numero-meta-api",
+      "name": "Crear Número en Meta"
+    }
+  ],
+  "connections": {
+    "webhook-crear-numero": {
+      "main": [[{ "node": "crear-numero-meta-api", "type": "main", "index": 0 }]]
+    },
+    "crear-numero-meta-api": {
+      "main": [[{ "node": "responder-success", "type": "main", "index": 0 }]]
+    }
+  }
+}
