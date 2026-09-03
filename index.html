@@ -1,78 +1,1076 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Admin Panel WhatsApp SaaS</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
-    .container { max-width: 1200px; margin: 0 auto; }
-    .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
-    .header h1 { color: #667eea; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-    .card { background: white; padding: 30px; border-radius: 10px; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-weight: bold; }
-    input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-    button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #f8f9fa; padding: 12px; text-align: left; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 12px; border-bottom: 1px solid #ddd; }
-    .status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-    .active { background: #d4edda; color: #155724; }
-    .message { padding: 12px; border-radius: 6px; margin-bottom: 20px; }
-    .success { background: #d4edda; color: #155724; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agentes">
+<title>Panel de Agentes — Incubadora</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#151a21; --panel2:#1b2129; --line:#252d38;
+    --fg:#e6eaf0; --muted:#8b97a8; --dim:#5f6b7d;
+    --accent:#2f81f7; --ok:#2ea043; --warn:#d29922; --bad:#da3633;
+    --hot:#f0883e;
+    --safe-b:env(safe-area-inset-bottom,0px);
+    --safe-t:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%;
+    overscroll-behavior-y:none;
+  }
+  button{font:inherit; cursor:pointer}
+  input,textarea,select{font:inherit; color:inherit}
+  a{color:var(--accent)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#2b3543;border-radius:6px}
+
+  /* ---------- BOOT / ERRORES GLOBALES ---------- */
+  #boot{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--muted); z-index:80; font-size:13px; text-align:center; padding:24px;
+  }
+  #fatal{
+    display:none; position:fixed; inset:0; z-index:90; background:var(--bg);
+    align-items:center; justify-content:center; padding:24px; text-align:center;
+  }
+  #fatal .card{max-width:420px}
+
+  /* ---------- LOGIN ---------- */
+  #login{display:none; align-items:center; justify-content:center; min-height:100dvh; padding:24px}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:28px; width:100%; max-width:380px;
+  }
+  .card h1{margin:0 0 4px; font-size:20px; letter-spacing:-.01em}
+  .card p.sub{margin:0 0 22px; color:var(--muted); font-size:13px}
+  .field{margin-bottom:14px}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:5px}
+  .field input, .field textarea, .field select{
+    width:100%; background:var(--bg); border:1px solid var(--line); border-radius:8px;
+    padding:11px 12px; outline:none; font-size:16px; /* 16px evita el zoom automatico de iOS */
+  }
+  .field textarea{font-size:14px}
+  .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--accent)}
+  .pwwrap{position:relative}
+  .pwwrap button{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    background:none; border:none; color:var(--muted); font-size:12px; padding:6px 8px;
+  }
+  .btn{
+    background:var(--accent); color:#fff; border:none; border-radius:8px;
+    padding:10px 16px; font-weight:600; min-height:38px;
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn:disabled{opacity:.5; cursor:default}
+  .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--fg); font-weight:500}
+  .btn.ghost:hover{background:var(--panel2); filter:none}
+  .btn.danger{background:var(--bad)}
+  .btn.wide{width:100%}
+  .btn.sm{padding:6px 10px; min-height:30px; font-size:12.5px}
+  .err{color:#ff7b72; font-size:13px; margin-top:12px; min-height:18px}
+  .linkbtn{background:none;border:none;color:var(--accent);padding:0;font-size:12.5px;margin-top:12px}
+
+  /* ---------- LAYOUT ---------- */
+  #app{
+    display:none; height:100vh; height:100dvh;
+    grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr);
+    padding-top:var(--safe-t); overflow:hidden;
+  }
+  #app > *{min-width:0}
+  header{
+    display:flex; align-items:center; gap:14px; padding:10px 14px;
+    border-bottom:1px solid var(--line); background:var(--panel); min-height:54px;
+  }
+  .brand{font-weight:700; letter-spacing:-.01em; white-space:nowrap}
+  .brand span{color:var(--muted); font-weight:400; font-size:12px; margin-left:7px}
+  #menuBtn{display:none; background:none;border:1px solid var(--line);color:var(--fg);
+    border-radius:8px; padding:6px 10px; line-height:1}
+  .metrics{display:flex; gap:8px; flex:1 1 0; min-width:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch}
+  .metrics::-webkit-scrollbar{display:none}
+  .metric{
+    background:var(--panel2); border:1px solid var(--line); border-radius:7px;
+    padding:5px 11px; white-space:nowrap; font-size:12px; color:var(--muted);
+  }
+  .metric b{color:var(--fg); font-size:14px; margin-right:5px; font-variant-numeric:tabular-nums}
+  .metric.alerta{border-color:#da363355; background:#da363318; color:#ff9c96}
+  .metric.alerta b{color:#ff7b72}
+  .who{color:var(--muted); font-size:12px; white-space:nowrap}
+
+  main{display:grid; grid-template-columns:290px 1fr; min-height:0; min-width:0}
+  aside{border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; background:var(--panel)}
+  .asidetop{padding:10px; border-bottom:1px solid var(--line); display:flex; gap:8px}
+  .asidetop input{
+    flex:1; background:var(--bg); border:1px solid var(--line);
+    border-radius:8px; padding:9px 11px; outline:none; font-size:16px; min-width:0;
+  }
+  .filters{display:flex; gap:6px; padding:8px 10px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .chip{
+    background:var(--bg); border:1px solid var(--line); color:var(--muted);
+    border-radius:20px; padding:4px 11px; font-size:12px; white-space:nowrap;
+  }
+  .chip.on{background:var(--panel2); color:var(--fg); border-color:var(--accent)}
+  .chip b{color:inherit; margin-left:4px; font-variant-numeric:tabular-nums}
+  .navrow{
+    padding:11px 13px; border-bottom:1px solid var(--line); cursor:pointer;
+    display:flex; align-items:center; gap:9px; font-weight:600; font-size:13px;
+  }
+  .navrow:hover{background:var(--panel2)}
+  .navrow.sel{background:var(--panel2); box-shadow:inset 3px 0 0 var(--accent)}
+  .list{overflow-y:auto; flex:1; -webkit-overflow-scrolling:touch; padding-bottom:var(--safe-b)}
+  .row{
+    padding:11px 13px; border-bottom:1px solid var(--line); cursor:pointer;
+    display:flex; align-items:center; gap:10px;
+  }
+  .row:hover{background:var(--panel2)}
+  .row.sel{background:var(--panel2); box-shadow:inset 3px 0 0 var(--accent)}
+  .dot{width:9px; height:9px; border-radius:50%; flex:none}
+  .dot.ok{background:var(--ok)}
+  .dot.warn{background:var(--warn)}
+  .dot.bad{background:var(--bad); box-shadow:0 0 0 3px #da363330}
+  .dot.off{background:var(--dim)}
+  .dot.unk{background:var(--dim); opacity:.5}
+  .rowmain{min-width:0; flex:1}
+  .rowname{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .rowsub{font-size:11.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  #backdrop{display:none}
+
+  section.content{overflow-y:auto; overflow-x:hidden; min-height:0; min-width:0; padding:20px 24px calc(70px + var(--safe-b)); -webkit-overflow-scrolling:touch}
+  .empty{color:var(--dim); text-align:center; padding:60px 20px}
+
+  .chead{display:flex; align-items:flex-start; gap:16px; margin-bottom:6px; flex-wrap:wrap}
+  .chead h2{margin:0; font-size:21px; letter-spacing:-.01em}
+  .badge{
+    font-size:11px; padding:3px 8px; border-radius:20px; border:1px solid var(--line);
+    color:var(--muted); background:var(--panel2); white-space:nowrap; display:inline-block;
+  }
+  .badge.on{color:#7ee787; border-color:#2ea04355; background:#2ea04318}
+  .badge.off{color:var(--muted)}
+  .badge.hot{color:var(--hot); border-color:#f0883e55; background:#f0883e18}
+  .badge.bad{color:#ff7b72; border-color:#da363355; background:#da363318}
+  .badge.warn{color:#e3b341; border-color:#d2992255; background:#d2992218}
+  .meta{color:var(--muted); font-size:12.5px; margin-bottom:16px; font-variant-numeric:tabular-nums; line-height:1.9}
+  .actions{display:flex; gap:8px; margin-left:auto; flex-wrap:wrap}
+  .copy{background:none;border:none;color:var(--dim);padding:0 4px;font-size:11px}
+  .copy:hover{color:var(--accent)}
+
+  .tabs{display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:18px; overflow-x:auto; scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    background:none; border:none; color:var(--muted); padding:10px 14px;
+    border-bottom:2px solid transparent; margin-bottom:-1px; font-weight:500; white-space:nowrap;
+  }
+  .tab:hover{color:var(--fg)}
+  .tab.on{color:var(--fg); border-bottom-color:var(--accent)}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:20px}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:13px 15px}
+  .stat .n{font-size:23px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+  .stat .l{font-size:11.5px; color:var(--muted); margin-top:2px}
+  .aviso{border-radius:9px; padding:13px 15px; border:1px solid var(--line); background:var(--panel); margin-bottom:14px; max-width:760px}
+  .aviso.bad{border-color:#da363355; background:#da363312}
+  .aviso.warn{border-color:#d2992255; background:#d2992212}
+
+  .tablewrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:9px}
+  table{width:100%; border-collapse:collapse; font-size:13px; min-width:520px}
+  th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--muted); font-weight:600; padding:9px 10px; border-bottom:1px solid var(--line);
+    background:var(--panel); position:sticky; top:0;
+  }
+  td{padding:10px; border-bottom:1px solid var(--line); vertical-align:middle}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:var(--panel)}
+  tbody tr:last-child td{border-bottom:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px}
+  .num{font-variant-numeric:tabular-nums; text-align:right}
+  .toolbar{display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap}
+  .toolbar input{
+    background:var(--bg); border:1px solid var(--line); border-radius:8px;
+    padding:8px 11px; outline:none; font-size:16px; flex:1; min-width:140px; max-width:280px;
+  }
+
+  .cfgrid{display:grid; gap:14px; max-width:900px}
+  .cfgrid textarea{min-height:90px; resize:vertical; line-height:1.55}
+  .cfgrid textarea.tall{min-height:160px}
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .hint{font-size:11.5px; color:var(--dim); margin-top:4px}
+  .savebar{
+    position:sticky; bottom:0; background:linear-gradient(transparent,var(--bg) 22%);
+    padding:14px 0 calc(6px + var(--safe-b)); display:flex; gap:10px; align-items:center;
+  }
+  .dirtytag{font-size:12px; color:var(--warn)}
+
+  /* chat */
+  .chatwrap{max-width:760px}
+  .msg{display:flex; margin-bottom:9px}
+  .msg.out{justify-content:flex-end}
+  .bubble{
+    max-width:82%; padding:9px 13px; border-radius:13px; white-space:pre-wrap;
+    word-break:break-word; overflow-wrap:anywhere; font-size:14px; line-height:1.5;
+  }
+  .msg.in .bubble{background:var(--panel2); border:1px solid var(--line); border-bottom-left-radius:4px}
+  .msg.out .bubble{background:#1f4a7d; border-bottom-right-radius:4px}
+  .msg mark{background:#d2992255; color:inherit; border-radius:3px}
+  .ts{font-size:10.5px; color:var(--dim); margin-top:4px; text-align:right}
+  .backlink{background:none;border:none;color:var(--accent);padding:0;margin-bottom:14px;font-size:13px}
+
+  /* modal */
+  .modal{
+    position:fixed; inset:0; background:#000b; display:flex; align-items:center;
+    justify-content:center; padding:16px; z-index:50;
+  }
+  .modal .card{max-width:520px; max-height:88dvh; overflow-y:auto}
+  .modal h2{margin:0 0 6px; font-size:18px}
+
+  .toast{
+    position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%);
+    background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+    padding:11px 18px; z-index:99; box-shadow:0 8px 28px #0008; font-size:13px;
+    max-width:92vw; text-align:center;
+  }
+  .toast.bad{border-color:var(--bad); color:#ff7b72}
+  .toast.ok{border-color:var(--ok); color:#7ee787}
+
+  /* ---------- MOVIL ---------- */
+  @media (max-width:860px){
+    header{gap:10px; padding:8px 12px}
+    #menuBtn{display:block}
+    .who{display:none}
+    .brand span{display:none}
+    .metrics{order:3; flex-basis:100%; padding-bottom:2px}
+    header{flex-wrap:wrap}
+    main{grid-template-columns:1fr}
+    aside{
+      position:fixed; top:0; bottom:0; left:0; width:min(86vw,330px); z-index:40;
+      transform:translateX(-102%); transition:transform .18s ease; border-right:1px solid var(--line);
+      padding-top:var(--safe-t);
+    }
+    aside.show{transform:none; box-shadow:0 0 40px #000a}
+    #backdrop.show{display:block; position:fixed; inset:0; background:#0008; z-index:35}
+    section.content{padding:16px 14px calc(80px + var(--safe-b))}
+    .two{grid-template-columns:1fr}
+    .chead h2{font-size:19px}
+    .actions{margin-left:0; width:100%}
+    .actions .btn{flex:1}
+    .grid{grid-template-columns:1fr 1fr}
+    .bubble{max-width:88%}
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🚀 Panel Admin WhatsApp SaaS</h1>
-      <p>Gestión de clientes y números WhatsApp</p>
-    </div>
-    
-    <div class="grid">
-      <div class="card">
-        <h2>Nuevo Cliente</h2>
-        <form id="clientForm">
-          <div class="form-group">
-            <label>Nombre del Negocio</label>
-            <input type="text" required>
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" required>
-          </div>
-          <div class="form-group">
-            <label>Descripción</label>
-            <textarea rows="4"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Teléfono del Dueño</label>
-            <input type="tel">
-          </div>
-          <button type="submit">Crear Cliente</button>
-        </form>
-      </div>
-      
-      <div class="card">
-        <h2>Clientes Activos</h2>
-        <div class="message success">✓ Panel listo en producción</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Negocio</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Ejemplo SA</td>
-              <td><span class="status active">Activo</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+
+<div id="boot">Verificando sesión…</div>
+
+<div id="fatal">
+  <div class="card">
+    <h1>No se pudo cargar el panel</h1>
+    <p class="sub" id="fatalMsg"></p>
+    <button class="btn wide" onclick="location.reload()">Reintentar</button>
   </div>
+</div>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <form class="card" id="loginForm">
+    <h1>Panel de Agentes</h1>
+    <p class="sub">Incubadora de Negocios · acceso administrativo</p>
+    <div class="field">
+      <label>Correo</label>
+      <input type="email" id="email" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <div class="pwwrap">
+        <input type="password" id="pass" autocomplete="current-password" required>
+        <button type="button" id="pwToggle">Ver</button>
+      </div>
+    </div>
+    <button class="btn wide" type="submit" id="loginBtn">Entrar</button>
+    <div class="err" id="loginErr"></div>
+    <button type="button" class="linkbtn" id="forgot">¿Olvidaste tu contraseña?</button>
+  </form>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header>
+    <button id="menuBtn" aria-label="Clientes">☰</button>
+    <div class="brand">Agentes <span>Incubadora</span></div>
+    <div class="metrics" id="metrics"></div>
+    <div class="who" id="who"></div>
+    <button class="btn ghost sm" id="logout">Salir</button>
+  </header>
+  <main>
+    <div id="backdrop"></div>
+    <aside id="aside">
+      <div class="asidetop">
+        <input id="search" placeholder="Buscar cliente…" autocapitalize="off" spellcheck="false">
+        <button class="btn" id="newBtn" title="Nuevo cliente">+</button>
+      </div>
+      <div class="filters" id="filters"></div>
+      <div class="navrow" id="navSalud">🩺 Salud general</div>
+      <div class="list" id="clientList"></div>
+    </aside>
+    <section class="content" id="content">
+      <div class="empty">Cargando…</div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://ytxnmscxyjttqftmznqj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_T3LJo-8teMIkimAtHitGWA_XKjzDBP5';
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '$' + Number(n||0).toLocaleString('es-MX',{maximumFractionDigits:0});
+
+function fatal(msg){
+  $('#boot').style.display = 'none';
+  $('#fatalMsg').textContent = msg;
+  $('#fatal').style.display = 'flex';
+}
+if(!window.supabase || !window.supabase.createClient){
+  fatal('No cargó la librería de Supabase (CDN bloqueado o sin internet). Revisa tu conexión y recarga.');
+  throw new Error('supabase-js no disponible');
+}
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function fecha(s, conHora){
+  if(!s) return '—';
+  const d = new Date(s);
+  const o = conHora
+    ? {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}
+    : {day:'2-digit',month:'short',year:'2-digit'};
+  return d.toLocaleString('es-MX',{...o, timeZone:'America/Mexico_City'});
+}
+function horasDesde(s){ return s ? (Date.now()-new Date(s))/3600000 : Infinity; }
+function hace(s){
+  if(!s) return 'sin actividad';
+  const m = Math.floor((Date.now()-new Date(s))/60000);
+  if(m < 1) return 'ahora';
+  if(m < 60) return `hace ${m} min`;
+  if(m < 1440) return `hace ${Math.floor(m/60)} h`;
+  const d = Math.floor(m/1440);
+  if(d < 60) return `hace ${d} d`;
+  return `hace ${Math.floor(d/30)} meses`;
+}
+function toast(msg, tipo){
+  document.querySelector('.toast')?.remove();
+  const t = document.createElement('div');
+  t.className = 'toast ' + (tipo||'');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3600);
+}
+async function rpc(fn, args){
+  const {data, error} = await db.rpc(fn, args||{});
+  if(error) throw new Error(error.message);
+  return data;
+}
+function copiar(txt, etiqueta){
+  navigator.clipboard?.writeText(txt).then(
+    ()=>toast((etiqueta||'Copiado')+' ✓','ok'),
+    ()=>toast('No se pudo copiar','bad'));
+}
+window.__copiar = copiar;
+
+/* ---------------- ESTADO ---------------- */
+let CLIENTES = [], DETALLES = {}, SEL = null, VISTA = 'salud';
+let TAB = 'resumen', LEADS = [], CHAT_TEL = null, CHAT_MSGS = [];
+let FILTRO = 'todos', DIRTY = false, REFRESCO = null;
+
+/* ---------------- SALUD ---------------- */
+const CFG_KEYS = ['cfg_descripcion','cfg_productos','cfg_tono','cfg_horario','cfg_faqs','cfg_reglas'];
+
+/* Devuelve {k, t, orden}. Usa el detalle cacheado si existe; si no, lo que traiga el listado. */
+function salud(c){
+  const d = DETALLES[c.id] || c;
+  const activo = d.activo ?? c.activo;
+  if(!activo) return {k:'off', t:'Pausado', orden:5};
+
+  const sabeToken = ('tiene_token' in d);
+  if(sabeToken && !d.tiene_token) return {k:'bad', t:'Sin token — no puede responder', orden:0};
+
+  const sabeAct = ('ultimo_mensaje' in d);
+  const h = sabeAct ? horasDesde(d.ultimo_mensaje) : null;
+  if(sabeAct && h === Infinity) return {k:'bad', t:'Nunca ha recibido un mensaje', orden:1};
+  if(sabeAct && h > 48) return {k:'warn', t:'Sin actividad ' + Math.floor(h/24) + ' d', orden:2};
+
+  const sabeCfg = CFG_KEYS.some(k => k in d);
+  if(sabeCfg){
+    const llenos = CFG_KEYS.filter(k => (d[k]||'').trim()).length;
+    if(llenos < 6) return {k:'warn', t:`Config ${llenos}/6`, orden:3};
+  }
+  if(!sabeToken && !sabeAct && !sabeCfg) return {k:'unk', t:'Sin revisar', orden:4};
+  return {k:'ok', t:'OK', orden:6};
+}
+
+/* ---------------- AUTH ---------------- */
+$('#pwToggle').addEventListener('click', () => {
+  const i = $('#pass');
+  i.type = i.type === 'password' ? 'text' : 'password';
+  $('#pwToggle').textContent = i.type === 'password' ? 'Ver' : 'Ocultar';
+});
+
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('#loginBtn'); btn.disabled = true; $('#loginErr').textContent = '';
+  try{
+    const {error} = await db.auth.signInWithPassword({
+      email: $('#email').value.trim(), password: $('#pass').value
+    });
+    if(error){ $('#loginErr').textContent = 'Correo o contraseña incorrectos.'; return; }
+    await arrancar();
+  }catch(err){
+    $('#loginErr').textContent = 'Error de red: ' + err.message;
+  }finally{ btn.disabled = false; }
+});
+
+$('#forgot').addEventListener('click', async () => {
+  const mail = $('#email').value.trim();
+  if(!mail){ $('#loginErr').textContent = 'Escribe tu correo arriba y vuelve a darle.'; return; }
+  try{
+    await db.auth.resetPasswordForEmail(mail, {redirectTo: location.origin});
+    $('#loginErr').style.color = '#7ee787';
+    $('#loginErr').textContent = 'Te mandamos un correo para restablecerla.';
+  }catch(e){ $('#loginErr').textContent = e.message; }
+});
+
+$('#logout').addEventListener('click', async () => {
+  if(DIRTY && !confirm('Tienes cambios sin guardar en la configuración. ¿Salir de todos modos?')) return;
+  await db.auth.signOut();
+  location.reload();
+});
+
+function mostrarLogin(msg){
+  $('#boot').style.display = 'none';
+  $('#app').style.display = 'none';
+  $('#login').style.display = 'flex';
+  if(msg) $('#loginErr').textContent = msg;
+}
+
+async function arrancar(){
+  let session = null;
+  try{ session = (await db.auth.getSession()).data.session; }
+  catch(e){ return fatal('No se pudo contactar a Supabase: ' + e.message); }
+  if(!session) return mostrarLogin();
+
+  let admin = false;
+  try { admin = await rpc('saas_es_admin'); }
+  catch(e){ await db.auth.signOut(); return mostrarLogin('No se pudo validar el permiso: ' + e.message); }
+
+  if(!admin){
+    await db.auth.signOut();
+    return mostrarLogin('Esta cuenta no tiene permisos de administrador.');
+  }
+
+  $('#boot').style.display = 'none';
+  $('#login').style.display = 'none';
+  $('#app').style.display = 'grid';
+  $('#who').textContent = session.user.email;
+  await Promise.all([cargarMetricas(), cargarClientes()]);
+  abrirSalud();
+  iniciarAutoRefresco();
+}
+
+/* ---------------- DATOS ---------------- */
+async function cargarMetricas(){
+  try{
+    const m = await rpc('saas_admin_metricas');
+    const pausados = Math.max(0,(m.tenants_total||0)-(m.tenants_activos||0));
+    const items = [
+      ['Activos', `${m.tenants_activos}/${m.tenants_total}`, pausados>0],
+      ['MRR', money(m.ingreso_mensual), false],
+      ['Msjs hoy', m.mensajes_hoy, Number(m.mensajes_hoy||0)===0],
+      ['7 días', m.mensajes_7d, false],
+      ['Leads', m.leads_total, false],
+      ['Calientes', m.leads_calientes, false],
+    ];
+    $('#metrics').innerHTML = items.map(([l,v,alerta]) =>
+      `<div class="metric ${alerta?'alerta':''}"><b>${esc(v)}</b>${esc(l)}</div>`).join('');
+  }catch(e){
+    $('#metrics').innerHTML = `<div class="metric alerta"><b>!</b>Métricas no cargaron</div>`;
+    console.error(e);
+  }
+}
+
+async function cargarClientes(){
+  try{
+    CLIENTES = await rpc('saas_admin_listar') || [];
+    pintarLista();
+    return true;
+  }catch(e){ toast('Error al cargar clientes: '+e.message,'bad'); return false; }
+}
+
+function ordenados(){
+  return CLIENTES.slice().sort((a,b) => {
+    const sa = salud(a), sb = salud(b);
+    if(sa.orden !== sb.orden) return sa.orden - sb.orden;
+    return (a.nombre_negocio||'').localeCompare(b.nombre_negocio||'');
+  });
+}
+
+function pintarFiltros(){
+  const cuenta = {todos:CLIENTES.length, alerta:0, activos:0, pausados:0};
+  CLIENTES.forEach(c => {
+    const s = salud(c);
+    if(s.k==='bad' || s.k==='warn') cuenta.alerta++;
+    if((DETALLES[c.id]?.activo ?? c.activo)) cuenta.activos++; else cuenta.pausados++;
+  });
+  const defs = [['todos','Todos'],['alerta','⚠ Alerta'],['activos','Activos'],['pausados','Pausados']];
+  $('#filters').innerHTML = defs.map(([k,l]) =>
+    `<button class="chip ${FILTRO===k?'on':''}" data-f="${k}">${l}<b>${cuenta[k]}</b></button>`).join('');
+  $$('#filters .chip').forEach(b => b.addEventListener('click', () => {
+    FILTRO = b.dataset.f; pintarLista();
+  }));
+}
+
+function pintarLista(){
+  pintarFiltros();
+  const q = $('#search').value.trim().toLowerCase();
+  const items = ordenados().filter(c => {
+    const act = DETALLES[c.id]?.activo ?? c.activo;
+    const s = salud(c);
+    if(FILTRO==='alerta'   && !(s.k==='bad'||s.k==='warn')) return false;
+    if(FILTRO==='activos'  && !act) return false;
+    if(FILTRO==='pausados' && act)  return false;
+    if(!q) return true;
+    return (c.nombre_negocio||'').toLowerCase().includes(q)
+        || (c.whatsapp_numero||'').includes(q);
+  });
+
+  $('#navSalud').classList.toggle('sel', VISTA==='salud');
+
+  $('#clientList').innerHTML = items.length ? items.map(c => {
+    const s = salud(c);
+    return `
+    <div class="row ${(VISTA==='cliente'&&SEL===c.id)?'sel':''}" data-id="${esc(c.id)}">
+      <div class="dot ${s.k}" title="${esc(s.t)}"></div>
+      <div class="rowmain">
+        <div class="rowname">${esc(c.nombre_negocio)}</div>
+        <div class="rowsub">${s.k==='ok'||s.k==='unk'
+          ? esc((c.whatsapp_numero||'sin número')+' · '+(c.conversaciones_mes||0)+' conv')
+          : esc(s.t)}</div>
+      </div>
+    </div>`;}).join('')
+    : '<div class="empty" style="padding:36px 16px;font-size:13px">Sin resultados</div>';
+
+  $$('#clientList .row').forEach(r =>
+    r.addEventListener('click', () => irACliente(r.dataset.id)));
+}
+
+function irACliente(id){
+  if(!confirmarSalida()) return;
+  SEL = id; VISTA='cliente'; TAB='resumen'; CHAT_TEL=null;
+  pintarLista(); abrirCliente(); cerrarDrawer();
+}
+
+$('#search').addEventListener('input', pintarLista);
+
+/* ---------------- DRAWER MOVIL ---------------- */
+function abrirDrawer(){ $('#aside').classList.add('show'); $('#backdrop').classList.add('show'); }
+function cerrarDrawer(){ $('#aside').classList.remove('show'); $('#backdrop').classList.remove('show'); }
+$('#menuBtn').addEventListener('click', () =>
+  $('#aside').classList.contains('show') ? cerrarDrawer() : abrirDrawer());
+$('#backdrop').addEventListener('click', cerrarDrawer);
+
+/* ---------------- CAMBIOS SIN GUARDAR ---------------- */
+function confirmarSalida(){
+  if(!DIRTY) return true;
+  const ok = confirm('Tienes cambios sin guardar en la configuración. ¿Descartarlos?');
+  if(ok) DIRTY = false;
+  return ok;
+}
+window.addEventListener('beforeunload', e => { if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
+
+/* ---------------- AUTO REFRESCO ---------------- */
+function iniciarAutoRefresco(){
+  clearInterval(REFRESCO);
+  REFRESCO = setInterval(async () => {
+    if(document.visibilityState !== 'visible') return;
+    if(DIRTY || document.querySelector('.modal')) return;
+    await Promise.all([cargarMetricas(), cargarClientes()]);
+    if(VISTA==='salud') pintarSalud(true);
+  }, 60000);
+}
+
+/* ---------------- VISTA SALUD ---------------- */
+$('#navSalud').addEventListener('click', () => {
+  if(!confirmarSalida()) return;
+  abrirSalud(); cerrarDrawer();
+});
+
+function abrirSalud(){
+  VISTA='salud'; SEL=null; CHAT_TEL=null;
+  pintarLista(); pintarSalud();
+}
+
+async function escanearTodo(){
+  const pendientes = CLIENTES.filter(c => !DETALLES[c.id]);
+  const lotes = 4;
+  for(let i=0; i<pendientes.length; i+=lotes){
+    await Promise.all(pendientes.slice(i,i+lotes).map(async c => {
+      try{ DETALLES[c.id] = await rpc('saas_admin_detalle', {p_tenant_id: c.id}) || {}; }
+      catch(e){ DETALLES[c.id] = {...c, _error: e.message}; }
+    }));
+    pintarSalud(true);
+  }
+  pintarLista();
+}
+
+function pintarSalud(soloRefresco){
+  if(VISTA !== 'salud') return;
+  const revisados = CLIENTES.filter(c => DETALLES[c.id]).length;
+  const filas = ordenados();
+  const problemas = filas.filter(c => ['bad','warn'].includes(salud(c).k));
+  const mrr = CLIENTES.reduce((a,c)=> a + Number((DETALLES[c.id]?.cuota_mensual) ?? c.cuota_mensual ?? 0), 0);
+
+  $('#content').innerHTML = `
+    <div class="chead">
+      <div>
+        <h2>Salud general</h2>
+        <div class="meta" style="margin:4px 0 0">
+          ${revisados}/${CLIENTES.length} clientes revisados a fondo${revisados<CLIENTES.length?' · escaneando…':''}
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost sm" id="rescan">Volver a revisar</button>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="stat"><div class="n">${CLIENTES.length}</div><div class="l">Clientes</div></div>
+      <div class="stat"><div class="n" style="color:${problemas.length?'#ff7b72':'inherit'}">${problemas.length}</div><div class="l">Con problema</div></div>
+      <div class="stat"><div class="n">${money(mrr)}</div><div class="l">Cuota mensual sumada</div></div>
+      <div class="stat"><div class="n">${CLIENTES.reduce((a,c)=>a+(Number(c.conversaciones_mes)||0),0)}</div><div class="l">Conversaciones del mes</div></div>
+    </div>
+    ${problemas.length ? `<div class="aviso bad"><b>${problemas.length} cliente(s) necesitan atención.</b> Un agente sin token o sin actividad en días es un cliente que está pagando y no está recibiendo el servicio.</div>` : ''}
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Cliente</th><th>Estado</th><th>Config</th>
+          <th class="num">Conv mes</th><th>Última actividad</th>
+        </tr></thead>
+        <tbody>${filas.map(c => {
+          const d = DETALLES[c.id] || c, s = salud(c);
+          const llenos = CFG_KEYS.some(k=>k in d) ? CFG_KEYS.filter(k=>(d[k]||'').trim()).length : null;
+          return `<tr data-id="${esc(c.id)}">
+            <td><b>${esc(c.nombre_negocio)}</b><div class="mono" style="color:var(--muted)">${esc(c.whatsapp_numero||'sin número')}</div></td>
+            <td><span class="badge ${s.k==='ok'?'on':s.k==='bad'?'bad':s.k==='warn'?'warn':'off'}">${esc(s.t)}</span></td>
+            <td>${llenos===null?'—':`${llenos}/6`}</td>
+            <td class="num">${c.conversaciones_mes||0}</td>
+            <td style="color:var(--muted);white-space:nowrap">${('ultimo_mensaje' in d)?(d.ultimo_mensaje?hace(d.ultimo_mensaje):'nunca'):'—'}</td>
+          </tr>`;}).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  $$('#content tbody tr').forEach(tr => tr.addEventListener('click', ()=>irACliente(tr.dataset.id)));
+  $('#rescan').addEventListener('click', () => { DETALLES = {}; pintarSalud(); });
+  if(!soloRefresco && revisados < CLIENTES.length) escanearTodo();
+}
+
+/* ---------------- DETALLE DE CLIENTE ---------------- */
+async function abrirCliente(forzar){
+  const c = CLIENTES.find(x => x.id === SEL);
+  if(!c) return;
+  let d = DETALLES[SEL];
+  if(!d || forzar){
+    $('#content').innerHTML = '<div class="empty">Cargando…</div>';
+    try{
+      d = await rpc('saas_admin_detalle', {p_tenant_id: SEL}) || {};
+      DETALLES[SEL] = d;
+      pintarLista();
+    }
+    catch(e){ $('#content').innerHTML = `<div class="empty">Error: ${esc(e.message)}</div>`; return; }
+  }
+  pintarCliente(d);
+}
+
+function pintarCliente(d){
+  const s = salud({id:SEL, ...d});
+  const num = (d.whatsapp_numero||'').replace(/\D/g,'');
+  $('#content').innerHTML = `
+    <button class="backlink" id="volverSalud">← Salud general</button>
+    <div class="chead">
+      <div>
+        <h2>${esc(d.nombre_negocio)}</h2>
+        <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge ${d.activo?'on':'off'}">${d.activo?'Activo':'Pausado'}</span>
+          ${d.cuota_mensual ? `<span class="badge">${money(d.cuota_mensual)}/mes</span>`:''}
+          <span class="badge ${d.tiene_token?'':'bad'}">${d.tiene_token?'Token OK':'⚠ Sin token'}</span>
+          ${s.k==='warn'?`<span class="badge warn">${esc(s.t)}</span>`:''}
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ${d.activo?'danger':''}" id="toggleBtn">${d.activo?'Desactivar':'Activar'}</button>
+        <button class="btn ghost" id="tokenBtn">Token</button>
+        <button class="btn ghost" id="resetBtn">Reset contador</button>
+      </div>
+    </div>
+    <div class="meta">
+      ${num ? `<a href="https://wa.me/${esc(num)}" target="_blank" rel="noopener">${esc(d.whatsapp_numero)}</a>` : 'sin número'}
+      <button class="copy" data-copy="${esc(num)}" data-label="Número">copiar</button> ·
+      Phone ID <span class="mono">${esc(d.whatsapp_phone_number_id||'—')}</span>
+      <button class="copy" data-copy="${esc(d.whatsapp_phone_number_id||'')}" data-label="Phone ID">copiar</button> ·
+      Alta ${fecha(d.fecha_registro)} ·
+      Última actividad ${d.ultimo_mensaje ? hace(d.ultimo_mensaje) : 'nunca'}
+    </div>
+    <div class="tabs">
+      <button class="tab ${TAB==='resumen'?'on':''}" data-t="resumen">Resumen</button>
+      <button class="tab ${TAB==='chats'?'on':''}" data-t="chats">Conversaciones</button>
+      <button class="tab ${TAB==='config'?'on':''}" data-t="config">Configuración</button>
+    </div>
+    <div id="tabBody"></div>`;
+
+  $('#volverSalud').addEventListener('click', () => { if(confirmarSalida()) abrirSalud(); });
+
+  $$('#content .copy').forEach(b => b.addEventListener('click',
+    () => copiar(b.dataset.copy, b.dataset.label)));
+
+  $$('#content .tab').forEach(t =>
+    t.addEventListener('click', () => {
+      if(!confirmarSalida()) return;
+      TAB = t.dataset.t; CHAT_TEL=null; pintarCliente(d);
+    }));
+
+  $('#toggleBtn').addEventListener('click', async () => {
+    const msg = d.activo
+      ? `¿Desactivar a ${d.nombre_negocio}? El agente DEJA de responder a sus clientes.`
+      : `¿Activar a ${d.nombre_negocio}?`;
+    if(!confirm(msg)) return;
+    try{
+      await rpc('saas_admin_toggle', {p_tenant_id: SEL, p_activo: !d.activo});
+      toast(d.activo ? 'Cliente desactivado' : 'Cliente activado','ok');
+      await Promise.all([cargarClientes(), cargarMetricas()]);
+      abrirCliente(true);
+    }catch(e){ toast(e.message,'bad'); }
+  });
+
+  $('#resetBtn').addEventListener('click', async () => {
+    if(!confirm(`El contador de ${d.nombre_negocio} está en ${d.conversaciones_mes||0}. Ponerlo en cero NO se puede deshacer. ¿Continuar?`)) return;
+    try{
+      await rpc('saas_admin_reset_contador', {p_tenant_id: SEL});
+      toast('Contador en cero','ok');
+      await cargarClientes(); abrirCliente(true);
+    }catch(e){ toast(e.message,'bad'); }
+  });
+
+  $('#tokenBtn').addEventListener('click', () => modalToken(d));
+
+  if(TAB === 'resumen') tabResumen(d);
+  if(TAB === 'chats')   tabChats();
+  if(TAB === 'config')  tabConfig(d);
+}
+
+function tabResumen(d){
+  const llenos = CFG_KEYS.filter(k => (d[k]||'').trim()).length;
+  const faltan = CFG_KEYS.filter(k => !(d[k]||'').trim())
+    .map(k => ({cfg_descripcion:'Descripción',cfg_productos:'Productos',cfg_tono:'Tono',
+                cfg_horario:'Horario',cfg_faqs:'FAQs',cfg_reglas:'Reglas'}[k]));
+  const h = horasDesde(d.ultimo_mensaje);
+  $('#tabBody').innerHTML = `
+    <div class="grid">
+      <div class="stat"><div class="n">${d.conversaciones_mes||0}</div><div class="l">Conversaciones del mes</div></div>
+      <div class="stat"><div class="n">${d.total_leads||0}</div><div class="l">Leads totales</div></div>
+      <div class="stat"><div class="n">${d.total_mensajes||0}</div><div class="l">Mensajes totales</div></div>
+      <div class="stat"><div class="n">${llenos}/6</div><div class="l">Campos de config</div></div>
+    </div>
+    ${!d.tiene_token ? `<div class="aviso bad"><b>Sin token de WhatsApp.</b> El agente NO puede responder. Si antes sí contestaba, casi siempre es que se guardó el token temporal de 24 h en lugar del System User token permanente.</div>`:''}
+    ${d.activo && d.tiene_token && h>48 ? `<div class="aviso warn"><b>Sin actividad desde ${hace(d.ultimo_mensaje)}.</b> Antes de asumir que no hay clientes escribiendo, revisa en orden: 1) el switch "Subscribe webhooks" de la WABA, 2) que la app de Meta esté publicada, 3) que el workflow de n8n esté Active, 4) que el phone_number_id de aquí sea idéntico al de Meta.</div>`:''}
+    ${llenos < 6 ? `<div class="aviso warn"><b>Config incompleta:</b> falta ${esc(faltan.join(', '))}. El agente responde con huecos en el prompt.</div>`:''}
+    ${d.notas ? `<div class="stat" style="max-width:760px;white-space:pre-wrap"><div class="l" style="margin:0 0 6px">Notas internas</div>${esc(d.notas)}</div>`:''}`;
+}
+
+/* ---------------- CONVERSACIONES ---------------- */
+async function tabChats(){
+  if(CHAT_TEL) return verChat();
+  $('#tabBody').innerHTML = '<div class="empty">Cargando…</div>';
+  try{ LEADS = await rpc('saas_admin_leads', {p_tenant_id: SEL, p_limit: 200}) || []; }
+  catch(e){ $('#tabBody').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+
+  if(!LEADS.length){ $('#tabBody').innerHTML = '<div class="empty">Todavía no hay conversaciones</div>'; return; }
+  pintarLeads('');
+}
+
+function pintarLeads(q){
+  const filtrados = LEADS.filter(l => !q
+    || (l.nombre||'').toLowerCase().includes(q.toLowerCase())
+    || (l.telefono||'').includes(q)
+    || (l.estado||'').toLowerCase().includes(q.toLowerCase()));
+
+  $('#tabBody').innerHTML = `
+    <div class="toolbar">
+      <input id="qLead" placeholder="Buscar por nombre, teléfono o estado…" value="${esc(q)}">
+      <button class="btn ghost sm" id="csvBtn">Exportar CSV</button>
+      <span style="color:var(--muted);font-size:12px">${filtrados.length} de ${LEADS.length}</span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Contacto</th><th>Teléfono</th><th>Estado</th>
+          <th class="num">Msjs</th><th>Último</th><th></th>
+        </tr></thead>
+        <tbody>${filtrados.map(l => `
+          <tr data-tel="${esc(l.telefono)}">
+            <td>${esc(l.nombre||'Sin nombre')}</td>
+            <td class="mono">${esc(l.telefono)}</td>
+            <td><span class="badge ${['caliente','escalado'].includes(l.estado)?'hot':''}">${esc(l.estado||'—')}</span></td>
+            <td class="num">${l.mensajes||0}</td>
+            <td style="color:var(--muted);white-space:nowrap">${hace(l.ultimo)}</td>
+            <td><a href="https://wa.me/${esc(String(l.telefono||'').replace(/\D/g,''))}" target="_blank"
+                   rel="noopener" onclick="event.stopPropagation()" title="Abrir en WhatsApp">WA ↗</a></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  $('#qLead').addEventListener('input', e => {
+    const v = e.target.value, pos = e.target.selectionStart;
+    pintarLeads(v);
+    const n = $('#qLead'); n.focus(); n.setSelectionRange(pos,pos);
+  });
+  $('#csvBtn').addEventListener('click', () => exportarCSV(filtrados));
+  $$('#tabBody tbody tr').forEach(tr =>
+    tr.addEventListener('click', () => { CHAT_TEL = tr.dataset.tel; verChat(); }));
+}
+
+function exportarCSV(rows){
+  const cab = ['nombre','telefono','estado','mensajes','ultimo'];
+  const csv = [cab.join(',')].concat(rows.map(l =>
+    cab.map(k => `"${String(l[k] ?? '').replace(/"/g,'""')}"`).join(','))).join('\n');
+  const nombre = (CLIENTES.find(c=>c.id===SEL)?.nombre_negocio || 'leads').replace(/\W+/g,'-').toLowerCase();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download = `leads-${nombre}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+async function verChat(){
+  $('#tabBody').innerHTML = '<div class="empty">Cargando…</div>';
+  try{ CHAT_MSGS = await rpc('saas_admin_chat', {p_tenant_id: SEL, p_telefono: CHAT_TEL, p_limit: 300}) || []; }
+  catch(e){ $('#tabBody').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  pintarChat('');
+}
+
+function pintarChat(q){
+  const lead = LEADS.find(l => l.telefono === CHAT_TEL);
+  const num = String(CHAT_TEL||'').replace(/\D/g,'');
+  const rx = q ? new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi') : null;
+  const visibles = q ? CHAT_MSGS.filter(m => (m.mensaje||'').toLowerCase().includes(q.toLowerCase())) : CHAT_MSGS;
+
+  $('#tabBody').innerHTML = `
+    <button class="backlink" id="volver">← Todas las conversaciones</button>
+    <div class="toolbar">
+      <div style="flex:1;min-width:160px">
+        <b>${esc(lead?.nombre || 'Sin nombre')}</b>
+        <span class="mono" style="color:var(--muted);margin-left:8px">${esc(CHAT_TEL)}</span>
+      </div>
+      <input id="qMsg" placeholder="Buscar en la conversación…" value="${esc(q)}">
+      <a class="btn ghost sm" style="text-decoration:none;display:inline-block"
+         href="https://wa.me/${esc(num)}" target="_blank" rel="noopener">Abrir en WhatsApp ↗</a>
+    </div>
+    <div class="chatwrap" id="chatwrap">
+      ${visibles.map(m => {
+        let txt = esc(m.mensaje);
+        if(rx) txt = txt.replace(rx,'<mark>$1</mark>');
+        return `<div class="msg ${m.rol==='assistant'?'out':'in'}">
+          <div><div class="bubble">${txt}</div><div class="ts">${fecha(m.creado,true)}</div></div>
+        </div>`;}).join('') || '<div class="empty">Sin mensajes</div>'}
+    </div>`;
+
+  $('#volver').addEventListener('click', () => { CHAT_TEL = null; tabChats(); });
+  $('#qMsg').addEventListener('input', e => {
+    const v = e.target.value, pos = e.target.selectionStart;
+    pintarChat(v);
+    const n = $('#qMsg'); n.focus(); n.setSelectionRange(pos,pos);
+  });
+  if(!q) $('#content').scrollTop = $('#content').scrollHeight;
+}
+
+/* ---------------- CONFIGURACION ---------------- */
+function tabConfig(d){
+  const f = (id,label,val,hint,tall) => `
+    <div class="field">
+      <label>${label}</label>
+      <textarea id="${id}" class="${tall?'tall':''}">${esc(val||'')}</textarea>
+      ${hint?`<div class="hint">${hint}</div>`:''}
+    </div>`;
+
+  $('#tabBody').innerHTML = `
+    <div class="cfgrid">
+      <div class="two">
+        <div class="field"><label>Nombre del negocio</label>
+          <input id="c_nombre" value="${esc(d.nombre_negocio||'')}"></div>
+        <div class="field"><label>Cuota mensual (MXN)</label>
+          <input id="c_cuota" type="number" step="0.01" inputmode="decimal" value="${esc(d.cuota_mensual ?? '')}">
+          <div class="hint">Lo que te paga a ti. Alimenta el MRR de arriba.</div></div>
+      </div>
+      <div class="field"><label>WhatsApp del dueño (avisos de lead caliente)</label>
+        <input id="c_dueno" inputmode="numeric" value="${esc(d.telefono_dueno||'')}" placeholder="5214771234567">
+        <div class="hint">Con lada país, sin + ni espacios. Aquí llegan los avisos cuando el agente marca [ESCALAR].</div></div>
+      ${f('c_desc','Descripción del negocio', d.cfg_descripcion)}
+      ${f('c_prod','Productos y servicios (con precios)', d.cfg_productos, null, true)}
+      <div class="two">
+        ${f('c_tono','Tono', d.cfg_tono)}
+        ${f('c_hora','Horario, ubicación y pagos', d.cfg_horario)}
+      </div>
+      ${f('c_faqs','Preguntas frecuentes', d.cfg_faqs, null, true)}
+      ${f('c_reglas','Reglas especiales', d.cfg_reglas,
+          'Los límites del agente: qué no puede decir, cuándo escalar, formato de WhatsApp (un solo asterisco para negritas, no dos).', true)}
+      ${f('c_notas','Notas internas (no las ve el agente)', d.notas)}
+      <div class="savebar">
+        <button class="btn" id="saveCfg">Guardar cambios</button>
+        <span class="dirtytag" id="dirtyTag"></span>
+      </div>
+    </div>`;
+
+  const campos = ['#c_nombre','#c_cuota','#c_dueno','#c_desc','#c_prod','#c_tono','#c_hora','#c_faqs','#c_reglas','#c_notas'];
+  campos.forEach(sel => $(sel).addEventListener('input', () => {
+    DIRTY = true; $('#dirtyTag').textContent = '● Cambios sin guardar';
+  }));
+
+  $('#saveCfg').addEventListener('click', async e => {
+    const tel = $('#c_dueno').value.replace(/\D/g,'');
+    if($('#c_dueno').value.trim() && tel.length < 10){
+      toast('El WhatsApp del dueño se ve incompleto','bad'); return;
+    }
+    e.target.disabled = true;
+    try{
+      await rpc('saas_admin_guardar_cfg', {
+        p_tenant_id: SEL,
+        p_nombre: $('#c_nombre').value.trim(),
+        p_descripcion: $('#c_desc').value,
+        p_productos: $('#c_prod').value,
+        p_tono: $('#c_tono').value,
+        p_horario: $('#c_hora').value,
+        p_faqs: $('#c_faqs').value,
+        p_reglas: $('#c_reglas').value,
+        p_telefono_dueno: tel,
+        p_cuota: $('#c_cuota').value === '' ? null : Number($('#c_cuota').value),
+        p_notas: $('#c_notas').value
+      });
+      DIRTY = false; $('#dirtyTag').textContent = 'Guardado ✓';
+      toast('Configuración guardada','ok');
+      await Promise.all([cargarClientes(), cargarMetricas()]);
+      DETALLES[SEL] = await rpc('saas_admin_detalle', {p_tenant_id: SEL}) || DETALLES[SEL];
+      pintarLista();
+    }catch(err){ toast('No se guardó: '+err.message,'bad'); }
+    e.target.disabled = false;
+  });
+}
+
+/* ---------------- MODALES ---------------- */
+function cerrarModal(){ document.querySelector('.modal')?.remove(); }
+
+function modalToken(d){
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `<div class="card">
+    <h2>Token de WhatsApp</h2>
+    <p class="sub">${d.tiene_token ? 'Ya hay un token guardado. Pegar uno nuevo lo reemplaza.' : 'Este cliente no tiene token — el agente no puede responder.'}</p>
+    <div class="field"><label>System User Token</label>
+      <textarea id="tk" style="min-height:90px" placeholder="EAA..." spellcheck="false"></textarea>
+      <div class="hint">El permanente de Business Settings (con whatsapp_business_messaging + whatsapp_business_management), no el temporal de 24 h de la pantalla de inicio.</div></div>
+    <div id="tkWarn" class="hint" style="color:var(--warn)"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn ghost" id="tkCancel">Cancelar</button>
+      <button class="btn" id="tkSave">Guardar</button>
+    </div>
+    <div class="err" id="tkErr"></div></div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if(e.target === m) cerrarModal(); });
+  $('#tkCancel').addEventListener('click', cerrarModal);
+  $('#tk').addEventListener('input', e => {
+    const v = e.target.value.trim();
+    let w = '';
+    if(v && !v.startsWith('EAA')) w = 'Ojo: los tokens de Meta empiezan con EAA.';
+    else if(v && v.length < 100) w = 'Ojo: se ve corto. Los System User token permanentes son largos (100+ caracteres). Los cortos suelen ser el temporal de 24 h.';
+    $('#tkWarn').textContent = w;
+  });
+  $('#tkSave').addEventListener('click', async () => {
+    const t = $('#tk').value.trim();
+    if(!t){ $('#tkErr').textContent = 'Pega el token.'; return; }
+    try{
+      await rpc('saas_admin_set_token', {p_tenant_id: SEL, p_token: t});
+      cerrarModal(); toast('Token actualizado','ok');
+      await cargarClientes(); abrirCliente(true);
+    }catch(e){ $('#tkErr').textContent = e.message; }
+  });
+}
+
+$('#newBtn').addEventListener('click', () => {
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `<div class="card">
+    <h2>Nuevo cliente</h2>
+    <p class="sub">Solo el nombre y el Phone Number ID son obligatorios. Lo demás se completa después.</p>
+    <div class="field"><label>Nombre del negocio *</label><input id="n_nom"></div>
+    <div class="field"><label>Phone Number ID *</label><input id="n_pid" class="mono" inputmode="numeric">
+      <div class="hint">Meta → WhatsApp → Step 2. Es el que enruta los mensajes a este cliente. Si no coincide letra por letra, el agente ignora los mensajes en silencio.</div></div>
+    <div class="field"><label>WABA ID</label><input id="n_waba" class="mono" inputmode="numeric"></div>
+    <div class="field"><label>Número (con lada país)</label><input id="n_num" inputmode="numeric" placeholder="5214771234567">
+      <div class="hint">Sin + ni espacios. En México va con el 1 después del 52.</div></div>
+    <div class="field"><label>Correo</label><input id="n_mail" type="email" autocapitalize="off"></div>
+    <div class="field"><label>Cuota mensual (MXN)</label><input id="n_cuota" type="number" step="0.01" inputmode="decimal"></div>
+    <div class="field"><label>System User Token</label><textarea id="n_tok" style="min-height:70px" spellcheck="false"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn ghost" id="nCancel">Cancelar</button>
+      <button class="btn" id="nSave">Crear</button>
+    </div>
+    <div class="err" id="nErr"></div></div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if(e.target === m) cerrarModal(); });
+  $('#nCancel').addEventListener('click', cerrarModal);
+  $('#nSave').addEventListener('click', async e => {
+    const nom = $('#n_nom').value.trim();
+    const pid = $('#n_pid').value.replace(/\D/g,'');
+    if(!nom || !pid){ $('#nErr').textContent = 'Nombre y Phone Number ID son obligatorios.'; return; }
+    const dup = CLIENTES.find(c => (c.nombre_negocio||'').toLowerCase() === nom.toLowerCase());
+    if(dup && !confirm(`Ya existe un cliente llamado "${dup.nombre_negocio}". ¿Crear otro de todos modos?`)) return;
+    e.target.disabled = true;
+    try{
+      const id = await rpc('saas_admin_crear', {
+        p_nombre: nom,
+        p_phone_number_id: pid,
+        p_waba_id: $('#n_waba').value.replace(/\D/g,''),
+        p_numero: $('#n_num').value.replace(/\D/g,''),
+        p_token: $('#n_tok').value.trim(),
+        p_correo: $('#n_mail').value.trim(),
+        p_cuota: $('#n_cuota').value === '' ? null : Number($('#n_cuota').value)
+      });
+      cerrarModal(); toast('Cliente creado','ok');
+      await Promise.all([cargarClientes(), cargarMetricas()]);
+      SEL = id; VISTA='cliente'; TAB = 'config'; pintarLista(); abrirCliente(true);
+    }catch(err){ $('#nErr').textContent = err.message; e.target.disabled = false; }
+  });
+});
+
+/* ---------------- ATAJOS ---------------- */
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    if(document.querySelector('.modal')) return cerrarModal();
+    return cerrarDrawer();
+  }
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){
+    e.preventDefault(); abrirDrawer(); $('#search').focus(); $('#search').select();
+  }
+});
+
+/* sesión persistente */
+arrancar();
+</script>
 </body>
 </html>
